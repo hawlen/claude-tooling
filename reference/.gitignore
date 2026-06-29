@@ -1,0 +1,3 @@
+# Vendored third-party reference snapshots are local-only and reproducible via the
+# fetch-*.ps1 scripts. We don't commit/redistribute them or bloat the hub.
+ECC/
