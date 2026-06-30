@@ -116,12 +116,18 @@ Registry of every Claude Code enhancement installed on this machine. `install.ps
 - **Source:** `vercel-labs/agent-skills@web-design-guidelines` (official Vercel, 28.5K★, **425K installs** — #5 leaderboard).
 - **Type:** skill — audits UI code against Vercel's Web Interface Guidelines (accessibility / UX / design).
 - **Scope:** user (global) — `skills/web-design-guidelines/` → `~/.claude/skills/`.
-- **⚠️ Vetting — Snyk = Med (understood):** it's a *thin shim* that **WebFetches live guidelines** from
-  `raw.githubusercontent.com/vercel-labs/web-interface-guidelines/main/command.md` at runtime, then applies
-  them. No executable code (single markdown file) → no exec risk, but it depends on a live external URL and the
-  rules are NOT pinned. Accepted (official source). **For full reproducibility, optionally pin** a snapshot of
-  `command.md` into this skill and point it at the local copy.
+- **Vetting — Snyk Med, RESOLVED by pinning:** upstream the skill WebFetched its rules live at runtime (the
+  Med flag). We **pinned** a snapshot — `web-interface-guidelines.md` (commit `4e799d4`) sits beside `SKILL.md`,
+  which now reads the local copy instead of fetching. Self-contained, reproducible, no runtime network call.
+  Re-pin by re-fetching `command.md` from `vercel-labs/web-interface-guidelines`.
 - **Use:** AIOX client sites — "review my UI / check accessibility / audit design".
+
+## 11. tailwind-css-patterns — skill (via §7)
+- **Source:** `giuseppe-trisciuoglio/developer-kit@tailwind-css-patterns` (MIT, 294★, 12.8K installs; indie author).
+- **Type:** skill — Tailwind utility-first patterns: responsive, layout, flex/grid, spacing, typography.
+- **Scope:** user (global) — `skills/tailwind-css-patterns/` → `~/.claude/skills/`.
+- **Vetting:** Socket/Snyk/Gen = Safe / 0 alerts / Low Risk. 9 files, no executables.
+- **Use:** upcoming Tailwind work on the AIOX client sites.
 
 ---
 
