@@ -2,6 +2,8 @@
 
 Registry of every Claude Code enhancement installed on this machine. `install.ps1` reproduces all of it.
 
+> Remote: **github.com/hawlen/claude-tooling** (private). Clone + `install.ps1` = full setup on a fresh box.
+
 ---
 
 ## 1. GitHub Spec Kit — spec-driven development
@@ -36,12 +38,58 @@ Registry of every Claude Code enhancement installed on this machine. `install.ps
 - **Use:** just ask for them, e.g. "let's brainstorm this", "do this test-first", "systematically debug".
 - **Update:** `claude plugin update superpowers` (restart to apply). **Disable:** `claude plugin disable superpowers`.
 
+## 3. Council-Loop — build-and-verify methodology (skill)
+- **Source:** authored in-house; this repo (`skills/council-loop/`) is now the source of truth.
+- **Type:** Claude Code **skill** (markdown — pure instructions, no code)
+- **Scope:** **user (global)** — `~/.claude/skills/council-loop/`
+- **Installed by:** `install.ps1` copies `skills/council-loop` → `~/.claude/skills/`.
+- **Use:** write **`COUNCIL-LOOP`** in any prompt to force it on; it also self-proposes (and asks first)
+  at the start of any substantial build / multi-component system / research-backtest / money-or-safety-
+  critical task. Core rule: nothing is DONE or TRUE until proven by **executed evidence**, attacked, and
+  reproduced — never by assertion.
+
+## 4. Subagents — generic role agents
+- **Source:** vendored markdown agent pack — **upstream unconfirmed** (wshobson/agents- or
+  VoltAgent/awesome-claude-code-subagents-style). TODO: pin the exact source repo + commit.
+- **Type:** Claude Code **subagents** (markdown)
+- **Scope:** **user (global)** — `~/.claude/agents/`
+- **Installed by:** `install.ps1` copies `agents/*.md` → `~/.claude/agents/`.
+- **Provides:** `code-reviewer` (opus) · `debugger` · `python-pro` · `ml-engineer` · `nlp-engineer` ·
+  `data-engineer` · `powershell-5.1-expert` (all sonnet unless noted).
+- **Use:** Claude auto-delegates, or ask explicitly: "use the powershell-5.1-expert agent".
+
+## 5. Magic MCP — 21st.dev UI component generator
+- **Repo:** https://github.com/21st-dev/magic-mcp · npm `@21st-dev/magic`
+- **Type:** **MCP server** (npx)
+- **Scope:** **user (global)** — `~/.claude.json` `mcpServers` / `claude mcp add --scope user`
+- **🔑 Secret:** needs a **21st.dev API key**. **NEVER commit it.** Before running `install.ps1`, set
+  `--% $env:TWENTY_FIRST_API_KEY = "<your key>"` (get one at https://21st.dev).
+- **Installed by:** `install.ps1` runs (only if the env var is set):
+  ```powershell
+  claude mcp add magic --scope user --env "API_KEY=$env:TWENTY_FIRST_API_KEY" -- npx -y "@21st-dev/magic@latest"
+  ```
+- **Use:** mainly frontend/website projects — ask for UI components; Magic's tools generate/refine them.
+
+## 6. guard-destructive — destructive-command backstop hook  ⚠️ OFF BY DEFAULT
+- **Source:** authored in-house (from the TT Bot project).
+- **Type:** **PreToolUse hook** (PowerShell) — pattern-blocks irreversible commands
+  (`rm -rf`, `format X:`, `Format-Volume`, `Clear-Disk`, `dd if=`, `DROP TABLE`, fork bomb, …).
+  Fails **open** (any error → allow), so a bug here can never stop you working.
+- **Scope:** **NOT auto-enabled.** Vendored at `hooks/guard-destructive.ps1`; `install.ps1` does **not**
+  wire it. It runs on *every* Bash/PowerShell call and can false-positive — opt in deliberately.
+- **Enable (opt-in):** copy `hooks/guard-destructive.ps1` into a project's `.claude/hooks/` and add a
+  `PreToolUse` matcher (Bash/PowerShell) in that project's `.claude/settings.local.json`, or wire it
+  globally in `~/.claude/settings.json`. Remove/relax the regex list freely.
+
 ---
 
 ## Global-layer state (this machine)
 - `~/.local/bin/` — `uv`, `uvx`, `specify` (CLIs on PATH).
-- `~/.claude/skills/` — `council-loop` (pre-existing). spec-kit skills are installed *per project*.
+- `~/.claude/skills/` — `council-loop` (**now hub-managed** — see §3). spec-kit skills are per-project.
+- `~/.claude/agents/` — the 7 generic subagents (see §4), deployed by `install.ps1`.
 - `~/.claude/` plugins — `superpowers@superpowers-marketplace` (user scope, enabled).
+- `~/.claude.json` `mcpServers` — `magic` (see §5; key lives only on the machine, never in this repo).
+- `reference/` — read-only ECC snapshot to mine from; never installed/run (see `reference/README.md`).
 
 ## Adding the next tool
 1. Append an entry above (repo, type, scope, install, use, update).

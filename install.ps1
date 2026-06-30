@@ -38,6 +38,39 @@ try {
     Good 'superpowers installed/enabled (restart Claude Code to apply if it was just added)'
 } catch { Warn "plugin install (likely already installed): $($_.Exception.Message)" }
 
+# --- 4. council-loop skill (user scope, global) ------------------------------------------------
+Info 'Deploying council-loop skill to ~/.claude/skills ...'
+$skillsDst = Join-Path $env:USERPROFILE '.claude\skills'
+New-Item -ItemType Directory -Force $skillsDst | Out-Null
+Copy-Item (Join-Path $PSScriptRoot 'skills\council-loop') $skillsDst -Recurse -Force
+Good 'council-loop skill deployed'
+
+# --- 5. generic subagents (user scope, global) -------------------------------------------------
+Info 'Deploying subagents to ~/.claude/agents ...'
+$agentsSrc = Join-Path $PSScriptRoot 'agents'
+$agentsDst = Join-Path $env:USERPROFILE '.claude\agents'
+New-Item -ItemType Directory -Force $agentsDst | Out-Null
+Copy-Item (Join-Path $agentsSrc '*.md') $agentsDst -Force
+Good ((Get-ChildItem $agentsSrc -Filter *.md | Measure-Object).Count.ToString() + ' subagents deployed to ~/.claude/agents')
+
+# --- 6. Magic MCP (21st.dev) — user scope ------------------------------------------------------
+#   Needs a 21st.dev API key. Set $env:TWENTY_FIRST_API_KEY before running. Never commit the key.
+Info 'Configuring Magic MCP (user scope)...'
+if ($env:TWENTY_FIRST_API_KEY) {
+    try {
+        & claude mcp add magic --scope user --env "API_KEY=$env:TWENTY_FIRST_API_KEY" -- npx -y '@21st-dev/magic@latest' 2>$null
+        Good 'Magic MCP configured (user scope)'
+    } catch { Warn "Magic MCP add (likely already present): $($_.Exception.Message)" }
+} else {
+    Warn 'TWENTY_FIRST_API_KEY not set — skipping Magic MCP. Set it and re-run to enable (key at https://21st.dev).'
+}
+
+# --- guard-destructive hook: VENDORED ONLY, intentionally NOT enabled --------------------------
+#   hooks\guard-destructive.ps1 is a destructive-command backstop. It is deliberately NOT wired here:
+#   it runs on every Bash/PowerShell call and can false-positive. To opt in, copy it into a project's
+#   .claude\hooks\ and add a PreToolUse matcher in settings (see MANIFEST.md §6).
+Info 'guard-destructive hook is vendored but OFF by default (see MANIFEST.md to enable).'
+
 # --- Summary ----------------------------------------------------------------------------------
 Info 'Installed tooling:'
 try { & claude plugin list 2>$null } catch {}
