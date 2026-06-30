@@ -56,6 +56,9 @@ Registry of every Claude Code enhancement installed on this machine. `install.ps
 - **Installed by:** `install.ps1` copies `agents/*.md` → `~/.claude/agents/`.
 - **Provides:** `code-reviewer` (opus) · `debugger` · `python-pro` · `ml-engineer` · `nlp-engineer` ·
   `data-engineer` · `powershell-5.1-expert` (all sonnet unless noted).
+- **Re-tuned in-house:** `powershell-5.1-expert` was rewritten for **Windows dev-scripting** (5.1 gotchas:
+  UTF-16/BOM encoding, no `&&`/ternary, native-exe stderr & stdin corruption, TLS 1.2, no coreutils) — it is
+  no longer the upstream AD/DNS/DHCP/GPO enterprise-infra version.
 - **Use:** Claude auto-delegates, or ask explicitly: "use the powershell-5.1-expert agent".
 
 ## 5. Magic MCP — 21st.dev UI component generator
