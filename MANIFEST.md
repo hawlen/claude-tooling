@@ -91,8 +91,9 @@ Registry of every Claude Code enhancement installed on this machine. `install.ps
   (`vercel-labs`, `anthropics`, `microsoft`); check the source repo's stars (<100★ → skeptical).
 - **Adopt — preferred (hub stays the single gate):** copy the chosen `SKILL.md` into `skills/<name>/`, add a
   section here, wire `install.ps1`.
-  **Alt — quick:** `npx skills add <owner/repo@skill> -g -y` — but the CLI targets `~/.agent/skills/` while
-  Claude Code reads `~/.claude/skills/`, so verify it actually lands where CC finds it.
+  **Alt — quick:** `npx skills add <owner/repo@skill> -g -y` — **verified**: it auto-detects Claude Code,
+  runs Socket/Snyk/Gen supply-chain scans, then **copies the skill into `~/.claude/skills/`** (staging in
+  `~/.agents/skills/`), so it works for CC out of the box. `npx skills list -g` lists global installs.
 - **Note:** our `anthropic-skills` (docx/pdf/pptx/xlsx/skill-creator) come from `anthropics/skills` — the #2
   source on the leaderboard — so we're already in this ecosystem.
 
