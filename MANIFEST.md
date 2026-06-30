@@ -132,6 +132,19 @@ Registry of every Claude Code enhancement installed on this machine. `install.ps
 - **Vetting:** Socket/Snyk/Gen = Safe / 0 alerts / Low Risk. 9 files, no executables.
 - **Use:** upcoming Tailwind work on the AIOX client sites.
 
+## 12. ECC-mined: money-critical correctness & safety (agents + skills)
+Cherry-picked from the read-only ECC reference (`reference/ECC/` @ `2159ed2`, ECC is MIT) via the §7 mining pass.
+All five are **markdown-only and self-contained** (independently re-scanned: no runtime fetch/exec). Some carry
+crypto/TS/web examples whose *patterns* transfer to Python/trading — re-skin opportunistically.
+- **Agents → `~/.claude/agents/`:**
+  - `mle-reviewer` — adversarially reviews ML/backtests for **leakage & look-ahead bias** (fake-edge defense).
+  - `silent-failure-hunter` — hunts swallowed exceptions / stale-data fallbacks in money-critical paths.
+- **Skills → `~/.claude/skills/`:**
+  - `mle-workflow` — chronological-split + data-contract + promotion-gate discipline for strategy search.
+  - `latency-critical-systems` — p50/p95/p99 + freshness method for the Alpaca → bar-store → execution hot path.
+  - `llm-trading-agent-security` — spend limits, circuit breakers, treat-market-input-as-attack for order authority.
+- **Deployed by:** `install.ps1` (agents + skills loops). **Provenance TODO:** original ECC sub-authors unpinned.
+
 ---
 
 ## Global-layer state (this machine)
