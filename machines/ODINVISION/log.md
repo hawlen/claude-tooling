@@ -1,0 +1,1 @@
+﻿- **2026-07-04 06:53**: Initial AI OS setup on this PC: orchestration principle, session ledger hooks, multi-PC versioning model
