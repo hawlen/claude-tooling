@@ -1,0 +1,28 @@
+name: validate
+on: [push, pull_request]
+
+jobs:
+  powershell-syntax:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: parse all first-party .ps1
+        shell: pwsh
+        run: |
+          $errs = @()
+          Get-ChildItem -Recurse -Filter *.ps1 |
+            Where-Object { $_.FullName -notmatch '\\reference\\' } |
+            ForEach-Object {
+              $tokens = $null; $parseErrors = $null
+              [System.Management.Automation.Language.Parser]::ParseFile($_.FullName, [ref]$tokens, [ref]$parseErrors) | Out-Null
+              if ($parseErrors.Count) { $errs += "$($_.FullName): $($parseErrors[0].Message)" }
+            }
+          if ($errs) { $errs | ForEach-Object { Write-Error $_ }; exit 1 }
+          Write-Output 'all .ps1 parse OK'
+
+  bash-syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: bash -n on installers
+        run: bash -n bootstrap.sh install.sh && echo 'all .sh parse OK'
