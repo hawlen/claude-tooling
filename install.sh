@@ -25,8 +25,9 @@ command -v specify >/dev/null 2>&1 && ok "specify $(specify --version 2>/dev/nul
 # 3. superpowers — Claude Code plugin (user scope, global)
 info "installing/updating superpowers plugin..."
 if command -v claude >/dev/null 2>&1; then
-  claude plugin marketplace add obra/superpowers-marketplace >/dev/null 2>&1 || warn "marketplace add (likely already present)"
-  if claude plugin install superpowers@superpowers-marketplace >/dev/null 2>&1; then
+  # migrate off the old superpowers-marketplace coordinate (ai-os uses the official one at project scope)
+  claude plugin uninstall superpowers@superpowers-marketplace >/dev/null 2>&1 || true
+  if claude plugin install superpowers@claude-plugins-official >/dev/null 2>&1; then
     ok "superpowers installed/enabled (restart Claude Code to apply if just added)"
   else warn "plugin install (likely already installed)"; fi
 else

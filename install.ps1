@@ -32,9 +32,11 @@ if (Test-Path $specify) { Good ('specify ' + (& $specify --version)) } else { Wa
 
 # --- 3. Superpowers — Claude Code plugin (user scope, global) ----------------------------------
 Info 'Installing / updating superpowers plugin (user scope)...'
-try { & claude plugin marketplace add obra/superpowers-marketplace 2>$null } catch { Warn "marketplace add (likely already present): $($_.Exception.Message)" }
+# Migrate off the old superpowers-marketplace coordinate — ai-os enables
+# superpowers@claude-plugins-official at project scope, and two coordinates load the skills twice.
+try { & claude plugin uninstall superpowers@superpowers-marketplace 2>$null } catch {}
 try {
-    & claude plugin install superpowers@superpowers-marketplace 2>$null
+    & claude plugin install superpowers@claude-plugins-official 2>$null
     Good 'superpowers installed/enabled (restart Claude Code to apply if it was just added)'
 } catch { Warn "plugin install (likely already installed): $($_.Exception.Message)" }
 

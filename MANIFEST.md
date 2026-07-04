@@ -24,14 +24,17 @@ Registry of every Claude Code enhancement installed on this machine. `install.ps
   per-project rather than copied into `~/.claude/skills/`. The one-line `specify init --here` is the cost.
 
 ## 2. Superpowers — development-methodology plugin (obra / Jesse Vincent)
-- **Repo:** https://github.com/obra/superpowers · Marketplace: `obra/superpowers-marketplace`
+- **Repo:** https://github.com/obra/superpowers · Marketplace: `claude-plugins-official` (Anthropic's official)
 - **Type:** Claude Code **plugin** (skills + methodology)
 - **Scope:** **user (global)** — active in every session on this machine, every project
 - **Installed:**
   ```powershell
-  claude plugin marketplace add obra/superpowers-marketplace
-  claude plugin install superpowers@superpowers-marketplace
+  claude plugin install superpowers@claude-plugins-official
   ```
+- **Coordinate note (2026-07-04):** standardized from `superpowers@superpowers-marketplace` to the
+  official marketplace, because hawlen/ai-os enables `superpowers@claude-plugins-official` at project
+  scope — two coordinates for the same plugin load its ~20 skills TWICE per session (pure token waste).
+  `install.ps1`/`install.sh` auto-migrate (uninstall the old coordinate before installing).
 - **Provides (skills auto-surface when relevant):** brainstorming · writing-plans ·
   test-driven-development (RED-GREEN-REFACTOR) · systematic-debugging · verification-before-completion ·
   subagent-driven-development · code-review · git-worktrees · writing-skills · using-superpowers.
@@ -153,7 +156,7 @@ three are stock ECC — patterns transfer; re-skin opportunistically.
 - `~/.local/bin/` — `uv`, `uvx`, `specify` (CLIs on PATH).
 - `~/.claude/skills/` — `council-loop` (**now hub-managed** — see §3). spec-kit skills are per-project.
 - `~/.claude/agents/` — the 7 generic subagents (see §4), deployed by `install.ps1`.
-- `~/.claude/` plugins — `superpowers@superpowers-marketplace` (user scope, enabled).
+- `~/.claude/` plugins — `superpowers@claude-plugins-official` (user scope, enabled).
 - `~/.claude.json` `mcpServers` — `magic` (see §5; key lives only on the machine, never in this repo).
 - `reference/` — read-only ECC snapshot to mine from; never installed/run (see `reference/README.md`).
 
