@@ -78,8 +78,13 @@ $dashDir = if ($env:AI_OS_DASHBOARD_DIR) { $env:AI_OS_DASHBOARD_DIR } else { Joi
 try {
     if (Test-Path (Join-Path $dashDir '.git')) {
         git -C $dashDir pull --ff-only
+        # git's non-zero exit is not a PS terminating error on its own; check it so a
+        # refused fast-forward (local commits / diverged history) Warns instead of
+        # silently reporting success against a stale clone.
+        if ($LASTEXITCODE -ne 0) { throw "git pull --ff-only failed in $dashDir (local changes or diverged history?)" }
     } else {
         git clone https://github.com/hawlen/ai-os-dashboard.git $dashDir
+        if ($LASTEXITCODE -ne 0) { throw "git clone of ai-os-dashboard failed" }
     }
     & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $dashDir 'install.ps1')
     Good "dashboard ready at $dashDir (desktop shortcut created)"
