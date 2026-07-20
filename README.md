@@ -9,7 +9,7 @@ A configuration layer that makes every Claude Code session — on every PC you o
 | Universal principles in every session | `install.ps1` deploys everything in `principles/` into `~/.claude/CLAUDE.md` (loaded by Claude Code at the start of every session, in every project) | ✅ v1 |
 | Same principles on all PCs | This folder is a git repo. Push it to a **private** remote, clone on another PC, run `install.ps1`. Re-run after pulling updates. | ✅ v1 (manual sync) |
 | "Knows everything that goes on" | Two sources: (1) Claude Code already stores full session transcripts under `~/.claude/projects/`; (2) AI OS registers SessionStart/SessionEnd hooks that append a machine-local ledger to `logs/activity.jsonl` | ✅ v1 (per-machine) |
-| Model orchestration (Sonnet executes, Opus plans, Fable architects) | `principles/00-model-orchestration.md` — enforced by the running model via subagent delegation with model overrides | ✅ v1 |
+| Model orchestration (dispatch economy: Haiku transcribes, Sonnet builds, Opus reviews, Fable architects) | `principles/00-model-orchestration.md` + `agents/` — enforced via subagent dispatch with explicit model pins | ✅ v1 |
 
 ### Known limits (by design, not bugs)
 
@@ -33,11 +33,21 @@ AI OS/
 
 ## Install on a new PC
 
+> ⚠️ Do NOT work from `main` after cloning: on this remote, `main` currently holds the
+> AI OS *machine layer* (an unrelated history). This versioning layer lives on the
+> `machine/<PCNAME>` branches until the two are reconciled. Start your machine branch
+> from the newest logged machine branch (`git branch -r` to list them):
+
 ```powershell
 git clone https://github.com/hawlen/ai-os.git "C:\AI OS"
-powershell -ExecutionPolicy Bypass -File "C:\AI OS\install.ps1"
-powershell -ExecutionPolicy Bypass -File "C:\AI OS\connect-github.ps1"   # one-time GitHub connection
+cd "C:\AI OS"
+git checkout -b "machine/$env:COMPUTERNAME" origin/machine/ODINVISION
+powershell -ExecutionPolicy Bypass -File install.ps1
+powershell -ExecutionPolicy Bypass -File connect-github.ps1   # one-time GitHub connection
 ```
+
+The new PC's GitHub account must be a collaborator on the repo before its first
+`sync.ps1` push (repo Settings → Collaborators).
 
 `install.ps1` is idempotent and non-destructive:
 - It writes the principles into `~/.claude/CLAUDE.md` **between `<!-- AI-OS:BEGIN -->` / `<!-- AI-OS:END -->` markers**, leaving anything you wrote outside the markers untouched. Re-running replaces only the managed block.
@@ -60,7 +70,16 @@ powershell -ExecutionPolicy Bypass -File "C:\AI OS\connect-github.ps1"   # one-t
 - **Every PC logs versions on its own branch** (`machine/<PCNAME>`). After any AI OS change or notable install: `sync.ps1 -Message "what changed and why"` — appends the explanation to `machines/<PCNAME>/log.md`, commits, and pushes. GitHub ends up holding every version of every PC, each with its reason.
 - **Adopt / roll back:** `adopt.ps1 -Ref <branch|tag|commit>` applies any logged version to this PC (an older commit = rollback), re-installs, and logs the adoption as a new version.
 - **Promote:** on the admin PC, `publish.ps1 -Ref <ref>` merges a reviewed version into `main` and pushes.
-- Honest limit: all PCs authenticate as the same GitHub account, so the guard is a local safety rail against accidents — not hard server-side security. Hard enforcement would need separate GitHub accounts plus branch protection.
+- Honest limit: the pre-push guard is a local safety rail against accidents — not hard server-side security. Hard enforcement needs branch protection on `main` in GitHub settings.
+
+## Two computers, two rhythms (no collisions)
+
+Working the same project from several PCs at different paces is the designed mode:
+
+1. **Each PC commits only through `sync.ps1`, only to its own `machine/<PCNAME>` branch.** Two machines can work simultaneously and never conflict, because they never write to the same branch.
+2. **Never check out another machine's branch to work on it.** Its branch is its log.
+3. **To take the other PC's progress:** `adopt.ps1 -Ref origin/machine/<OTHERPC>` — fetches, overlays that version's content, re-installs, and records the adoption as a new logged version on *your* branch. No merges, ever.
+4. Rhythm in practice: sync when you stop working on one machine, adopt when you sit down at the other. If you forget to adopt, nothing breaks — the machines just diverge until the next adopt.
 
 ## Roadmap ideas
 
