@@ -54,6 +54,28 @@ if (Test-Path $agentsSrc) {
 }
 
 # ---------------------------------------------------------------------------
+# 1c. Superpowers plugin (user scope) - required by principles/02-workflow.md.
+#     Best-effort: warn and continue if the claude CLI is unavailable.
+# ---------------------------------------------------------------------------
+$claudeCli = Get-Command claude -ErrorAction SilentlyContinue
+if ($claudeCli) {
+    $plugins = & claude plugin list 2>&1 | Out-String
+    if ($plugins -notmatch 'superpowers') {
+        $mkts = & claude plugin marketplace list 2>&1 | Out-String
+        if ($mkts -notmatch 'claude-plugins-official') {
+            & claude plugin marketplace add anthropics/claude-plugins-official 2>&1 | Out-Null
+        }
+        & claude plugin install superpowers@claude-plugins-official 2>&1 | Out-Null
+        if ($LASTEXITCODE -eq 0) { Write-Host '[AI OS] Superpowers plugin installed (user scope)' }
+        else { Write-Warning '[AI OS] Superpowers plugin install failed - run manually: claude plugin install superpowers@claude-plugins-official' }
+    } else {
+        Write-Host '[AI OS] Superpowers plugin already installed'
+    }
+} else {
+    Write-Warning '[AI OS] claude CLI not found - skipping Superpowers plugin install'
+}
+
+# ---------------------------------------------------------------------------
 # 2. Versioning guard: only the admin PC (marker file) may push main.
 # ---------------------------------------------------------------------------
 if ($Admin) {

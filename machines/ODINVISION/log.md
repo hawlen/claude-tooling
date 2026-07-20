@@ -1,3 +1,4 @@
 ﻿- **2026-07-04 06:53**: Initial AI OS setup on this PC: orchestration principle, session ledger hooks, multi-PC versioning model
 - **2026-07-04 07:23**: Added connect-github.ps1 (self-serve GitHub connection) and fail-fast network handling in sync/adopt/publish scripts
 - **2026-07-20 06:18**: Adopted ai-os-template dispatch-economy model routing (haiku transcription / sonnet executor / opus risky review / fable architect, trivial in-session); rewrote principles/00-model-orchestration.md around the routing table; added executor (sonnet) + architect (fable) global agents; install.ps1 now deploys agents/ to ~/.claude/agents
+- **2026-07-20 06:40**: Adopted ai-os-template operating model: Superpowers plugin (user scope, official marketplace, auto-installed by install.ps1) + principles/02-workflow.md (Superpowers-owned workflow, effort triage, spec-before-big-builds, 3-attempt debugging circuit breaker)
