@@ -1,74 +1,45 @@
-# Claude Model Orchestration (Efficiency Optimized)
+# Claude Model Orchestration (Dispatch Economy)
 
 The goal is to maximize completed development work per token spent.
 
-Optimize for: first-pass correctness, minimal rework cycles, reduced repeated reasoning, low context re-reading, fast feature completion.
+Optimize for: first-pass correctness, minimal rework cycles, reduced repeated reasoning, low context re-reading, fast feature completion. Do NOT optimize for raw model usage reduction — optimize for total engineering throughput.
 
-Do NOT optimize for raw model usage reduction. Optimize for total engineering throughput.
+Scheme adopted 2026-07-20 from ai-os-template's "Model routing (dispatch economy)": the orchestrating session holds the context and delegates work DOWN to the cheapest model that can complete it with high confidence.
 
-## Core Principle
+## The routing table
 
-> Use the least powerful model that can complete the *current decision step with high confidence and low risk of rework.*
+| Work type | Route | Model |
+|---|---|---|
+| Pure transcription / mechanical edits (complete code already in the task text, single-file fixes) | direct dispatch | **haiku** (cheapest tier) |
+| Well-specified implementation from prose | `executor` agent | **sonnet** |
+| Mechanical diff review | direct dispatch | **sonnet** |
+| Subtle or risky review | `code-reviewer` agent | **opus** |
+| Architecture decisions; final whole-branch review | `architect` agent (read-only, rare) | **fable** |
+| Trivial-triage tasks | **no dispatch at all** | session model |
 
-Escalate only when it reduces total future work (debugging, rework, or redesign).
+## Cardinal rules
 
-## Model Roles
+1. **Always set the model explicitly when dispatching.** An omitted model silently inherits the expensive session model — that is the single biggest source of silent token waste.
+2. **Trivial tasks stay in-session.** A subagent starts with zero context and must re-read it; for a small edit the handoff costs more than it saves. Trivial = single file, reversible, known pattern, no design decision, no new dependency.
+3. **The table governs regardless of which model the session runs.** A big-model session delegates down (haiku/sonnet do the bulk); a Sonnet session still routes risky reviews UP to opus and architecture UP to fable — the table is about matching work to tier, in both directions.
+4. **Escalation triggers:** the moment a "trivial" task fails once, surprises you, or grows beyond one file — stop and route it through the table properly; no second direct attempt. If the same failure survives 3 attempts, stop entirely and consider the `architect`.
+5. **Missing agent fallback:** if a named agent is not installed on this machine, dispatch a general-purpose subagent with the same explicit model pin (e.g. `model: "opus"` for a risky review).
 
-### Sonnet 5 — Executor (Default)
+## Enforcement mechanics (Claude Code)
 
-Use for ~all mechanical and well-specified work: code implementation, file editing, refactoring, straightforward debugging, writing tests, reading codebase context, applying known patterns, large multi-file changes, documentation, repetitive or structured tasks.
+- **Agent tool:** pass the `model` option (`"haiku"` / `"sonnet"` / `"opus"` / `"fable"`) on every dispatch, or use the named agents (`executor`, `code-reviewer`, `architect`) whose frontmatter pins the model.
+- **Workflow tool:** apply the same mapping via each `agent()` call's `model` option — haiku/sonnet for mechanical and execution stages, opus for review/judge stages, fable only for architecture-level decisions.
+- **Agents deployed by this repo** (`agents/` → `~/.claude/agents/`): `executor` (sonnet), `architect` (fable, read-only). `code-reviewer` (opus) comes from the machine layer; use the fallback rule if absent.
 
-**Rule:** If the task is clearly defined → Sonnet executes immediately.
-
-### Opus 4.8 — Engineering Lead (Optimization Layer)
-
-Use when reasoning upfront will reduce implementation cycles: implementation plans, medium-complexity debugging, cross-module integration design, API design, performance optimization, code reviews, clarifying ambiguous requirements, resolving uncertainty before coding.
-
-**Rule:** Use Opus when there is uncertainty that would otherwise cause rework. Opus exists to reduce Sonnet retries.
-
-### Fable 5 — Principal Architect (Rare Use)
-
-Use only when decisions have system-wide impact or require novel reasoning: system architecture, AI agent design, complex algorithms, security-critical design, deep architectural tradeoffs, final approval of major production changes.
-
-**Rule:** Fable is only used when both Sonnet and Opus are insufficient to avoid systemic design risk.
-
-## Decision Strategy
-
-1. **Try Sonnet first by default** — when the task is well-defined, the solution is known or standard, and it can be implemented without ambiguity.
-2. **Escalate to Opus BEFORE coding if:** requirements are unclear; multiple design paths exist; mistakes would require rework across files; debugging has already failed once; integration between systems is required.
-3. **Escalate to Fable if:** architecture affects many subsystems; novel algorithm or system design is required; security or correctness is critical; Opus cannot confidently define a solution; the problem has already failed multiple approaches.
-4. **Always return to Sonnet after planning.** Once Opus or Fable defines a solution, Sonnet executes it. Do NOT use Opus/Fable for repetitive implementation.
-
-## Execution Flow Patterns
-
-- Simple feature: Sonnet → implement → done
-- Medium feature: Sonnet → (if uncertain) Opus plan → Sonnet implementation
-- Complex feature: Sonnet → Opus design → Sonnet implementation → Opus review
-- Architecture-level: Sonnet → Opus exploration → Fable decision → Sonnet implementation
-- Debugging: Sonnet fix attempt → Opus diagnosis → Sonnet fix → Fable only if systemic
-
-## Efficiency Rules (Token Optimization Layer)
+## Efficiency rules (token optimization layer)
 
 - Do not re-read files unless they have changed.
 - Do not re-summarize already analyzed context.
 - Batch edits instead of incremental micro-edits.
 - Prefer full solutions over iterative patching when confidence is high.
-- Avoid model switching mid-task unless necessary.
-- Prefer planning once, then executing fully.
-
-Most token waste comes from repeated Sonnet debugging loops, premature implementation without planning, and unnecessary Fable involvement. Most efficiency gains come from using Opus briefly to eliminate ambiguity, letting Sonnet execute in bulk, and reserving Fable for true system-level decisions.
-
-## How to enforce this inside Claude Code (mechanics)
-
-A config file cannot swap the main session's model — the user picks that with `/model`. Whatever model is currently running enforces this policy through **delegation**:
-
-- **If you are running as Sonnet** and a Step-2/Step-3 trigger fires: spawn a planning subagent via the Agent tool with `model: "opus"` (or `"fable"` for Step-3 triggers), get the plan/decision back, then execute it yourself. Do not grind through failed debugging loops — one failed fix attempt is the escalation trigger.
-- **If you are running as Opus or Fable**: do the planning/design inline (you are the right tier for it), then delegate bulk mechanical implementation to subagents with `model: "sonnet"` when the work is large and well-specified. For small edits, just do them — spawning a subagent that re-reads context costs more than it saves.
-- **Workflow tool**: apply the same mapping via each `agent()` call's `model` option — `sonnet` for execution stages, `opus` for review/judge stages, `fable` only for architecture-level decisions.
-- **Escalation is not free.** A subagent starts with zero context and must re-read it. Only escalate when the rework risk genuinely exceeds that cost — that is the whole point of this policy.
-- Recommended session default on all machines: Sonnet 5 for day-to-day work (`/model sonnet`), with escalation happening through subagents per the rules above.
+- Prefer planning once, then executing fully; avoid model switching mid-task unless the table demands it.
 
 ## Philosophy
 
-Sonnet builds. Opus removes uncertainty. Fable defines direction.
-Think once. Build once. Minimize rework.
+Haiku transcribes. Sonnet builds. Opus reviews. Fable defines direction.
+Think once. Build once. Dispatch down. Minimize rework.

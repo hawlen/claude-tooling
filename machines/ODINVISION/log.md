@@ -1,2 +1,3 @@
 ﻿- **2026-07-04 06:53**: Initial AI OS setup on this PC: orchestration principle, session ledger hooks, multi-PC versioning model
 - **2026-07-04 07:23**: Added connect-github.ps1 (self-serve GitHub connection) and fail-fast network handling in sync/adopt/publish scripts
+- **2026-07-20 06:18**: Adopted ai-os-template dispatch-economy model routing (haiku transcription / sonnet executor / opus risky review / fable architect, trivial in-session); rewrote principles/00-model-orchestration.md around the routing table; added executor (sonnet) + architect (fable) global agents; install.ps1 now deploys agents/ to ~/.claude/agents

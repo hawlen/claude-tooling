@@ -41,6 +41,19 @@ if (Test-Path $claudeMd) {
 Write-Host "[AI OS] Principles deployed to $claudeMd ($($files.Count) file(s))"
 
 # ---------------------------------------------------------------------------
+# 1b. Deploy agents/ into ~/.claude/agents/ (global subagents referenced by
+#     the model-orchestration routing table).
+# ---------------------------------------------------------------------------
+$agentsSrc = Join-Path $root 'agents'
+if (Test-Path $agentsSrc) {
+    $agentsDst = Join-Path $claudeDir 'agents'
+    if (-not (Test-Path $agentsDst)) { New-Item -ItemType Directory -Path $agentsDst -Force | Out-Null }
+    $agentFiles = @(Get-ChildItem $agentsSrc -Filter '*.md')
+    foreach ($f in $agentFiles) { Copy-Item $f.FullName (Join-Path $agentsDst $f.Name) -Force }
+    Write-Host "[AI OS] Agents deployed to $agentsDst ($($agentFiles.Count) file(s))"
+}
+
+# ---------------------------------------------------------------------------
 # 2. Versioning guard: only the admin PC (marker file) may push main.
 # ---------------------------------------------------------------------------
 if ($Admin) {
